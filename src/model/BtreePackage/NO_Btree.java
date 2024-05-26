@@ -1,8 +1,9 @@
-package model;
+package model.BtreePackage;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
-public class NO_Btree {
+public class NO_Btree implements Serializable {
     private int t;
     private int n;
     private boolean folha;
@@ -15,10 +16,6 @@ public class NO_Btree {
         this.n = 0;
         this.folha = true;
         this.chaves = new CHAVE_Btree[(2 * t) - 1];
-    }
-
-    public int getT() {
-        return t;
     }
 
     public int getN() {
@@ -37,24 +34,12 @@ public class NO_Btree {
         return filhos;
     }
 
-    public void setT(int t) {
-        this.t = t;
-    }
-
     public void setN(int n) {
         this.n = n;
     }
 
     public void setFolha(boolean folha) {
         this.folha = folha;
-    }
-
-    public void setChaves(CHAVE_Btree[] chaves) {
-        this.chaves = chaves;
-    }
-
-    public void setFilhos(NO_Btree[] filhos) {
-        this.filhos = filhos;
     }
 
     @Override
