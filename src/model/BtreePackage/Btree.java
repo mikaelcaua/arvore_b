@@ -130,7 +130,7 @@ public class Btree implements Serializable {
             return null;
         }
 
-        Object deletedKey = delete(raiz, key);
+        Object chaveDeletada = delete(raiz, key);
 
         if (raiz.getN() == 0) {
             if (raiz.isFolha()) {
@@ -141,142 +141,145 @@ public class Btree implements Serializable {
         }
         nNos--;
         salvarEmArquivo(this,nomeArquivo);
-        return deletedKey;
+        return chaveDeletada;
     }
 
     private Object delete(NO_Btree no, int key) {
-        int idx = findKey(no, key);
+        int indice = acharChave(no, key);
 
-        if (idx < no.getN() && no.getChaves()[idx].getVal() == key) {
+        if (indice < no.getN() && no.getChaves()[indice].getVal() == key) {
             if (no.isFolha()) {
-                return deleteFolha(no, idx);
+                return deleteFolha(no, indice);
             } else {
-                return deleteNaoFolha(no, idx);
+                return deleteNaoFolha(no, indice);
             }
         } else {
             if (no.isFolha()) {
                 return null;
             }
 
-            boolean flag = (idx == no.getN());
+            boolean teste = (indice == no.getN());
 
-            if (no.getFilhos()[idx].getN() < t) {
-                fill(no, idx);
+            if (no.getFilhos()[indice].getN() < t) {
+                fill(no, indice);
             }
 
-            if (flag && idx > no.getN()) {
-                return delete(no.getFilhos()[idx - 1], key);
+            if (teste && indice > no.getN()) {
+                return delete(no.getFilhos()[indice - 1], key);
             } else {
-                return delete(no.getFilhos()[idx], key);
+                return delete(no.getFilhos()[indice], key);
             }
         }
     }
 
-    private Object deleteFolha(NO_Btree no, int idx) {
-        Object deletedKey = no.getChaves()[idx].getUser();
-        for (int i = idx + 1; i < no.getN(); i++) {
+    private Object deleteFolha(NO_Btree no, int indice) {
+        Object deletedKey = no.getChaves()[indice].getUser();
+        for (int i = indice + 1; i < no.getN(); i++) {
             no.getChaves()[i - 1] = no.getChaves()[i];
         }
         no.setN(no.getN() - 1);
         return deletedKey;
+
     }
 
-    private Object deleteNaoFolha(NO_Btree no, int idx) {
-        CHAVE_Btree key = no.getChaves()[idx];
+    private Object deleteNaoFolha(NO_Btree no, int indice) {
+        CHAVE_Btree key = no.getChaves()[indice];
 
-        if (no.getFilhos()[idx].getN() >= t) {
-            CHAVE_Btree pred = getPredecessor(no, idx);
-            no.getChaves()[idx] = pred;
-            return delete(no.getFilhos()[idx], pred.getVal());
-        } else if (no.getFilhos()[idx + 1].getN() >= t) {
-            CHAVE_Btree succ = getSuccessor(no, idx);
-            no.getChaves()[idx] = succ;
-            return delete(no.getFilhos()[idx + 1], succ.getVal());
+        if (no.getFilhos()[indice].getN() >= t) {
+            CHAVE_Btree pred = getPredecessor(no, indice);
+            no.getChaves()[indice] = pred;
+            return delete(no.getFilhos()[indice], pred.getVal());
+        } else if (no.getFilhos()[indice + 1].getN() >= t) {
+            CHAVE_Btree succ = getSuccessor(no, indice);
+            no.getChaves()[indice] = succ;
+            return delete(no.getFilhos()[indice + 1], succ.getVal());
         } else {
-            merge(no, idx);
-            return delete(no.getFilhos()[idx], key.getVal());
+            merge(no, indice);
+            return delete(no.getFilhos()[indice], key.getVal());
         }
     }
 
-    private CHAVE_Btree getPredecessor(NO_Btree no, int idx) {
-        NO_Btree cur = no.getFilhos()[idx];
+    private CHAVE_Btree getPredecessor(NO_Btree no, int indice) {
+        NO_Btree cur = no.getFilhos()[indice];
         while (!cur.isFolha()) {
             cur = cur.getFilhos()[cur.getN()];
         }
         return cur.getChaves()[cur.getN() - 1];
     }
 
-    private CHAVE_Btree getSuccessor(NO_Btree no, int idx) {
-        NO_Btree cur = no.getFilhos()[idx + 1];
+    private CHAVE_Btree getSuccessor(NO_Btree no, int indice) {
+        NO_Btree cur = no.getFilhos()[indice + 1];
         while (!cur.isFolha()) {
             cur = cur.getFilhos()[0];
         }
+
         return cur.getChaves()[0];
     }
 
-    private void fill(NO_Btree no, int idx) {
-        if (idx != 0 && no.getFilhos()[idx - 1].getN() >= t) {
-            borrowFromPrev(no, idx);
-        } else if (idx != no.getN() && no.getFilhos()[idx + 1].getN() >= t) {
-            borrowFromNext(no, idx);
+    private void preencher(NO_Btree no, int indice) {
+        if (indice != 0 && no.getFilhos()[indice - 1].getN() >= t) {
+            pedirPrev(no, indice);
+        } else if (indice != no.getN() && no.getFilhos()[indice + 1].getN() >= t) {
+            pedirProximo(no, indice);
         } else {
-            if (idx != no.getN()) {
-                merge(no, idx);
+            if (indice != no.getN()) {
+                merge(no, indice);
             } else {
-                merge(no, idx - 1);
+                merge(no, indice - 1);
             }
         }
     }
 
-    private void borrowFromPrev(NO_Btree no, int idx) {
-        NO_Btree child = no.getFilhos()[idx];
-        NO_Btree sibling = no.getFilhos()[idx - 1];
+    private void pedirPrev(NO_Btree no, int indice) {
+        NO_Btree filho = no.getFilhos()[indice];
+        NO_Btree irmao = no.getFilhos()[indice - 1];
 
-        for (int i = child.getN() - 1; i >= 0; i--) {
-            child.getChaves()[i + 1] = child.getChaves()[i];
+        for (int i = filho.getN() - 1; i >= 0; i--) {
+            filho.getChaves()[i + 1] = filho.getChaves()[i];
         }
 
-        if (!child.isFolha()) {
-            for (int i = child.getN(); i >= 0; i--) {
-                child.getFilhos()[i + 1] = child.getFilhos()[i];
+        if (!filho.isFolha()) {
+            for (int i = filho.getN(); i >= 0; i--) {
+                filho.getFilhos()[i + 1] = filho.getFilhos()[i];
             }
         }
 
-        child.getChaves()[0] = no.getChaves()[idx - 1];
+        filho.getChaves()[0] = no.getChaves()[indice - 1];
 
         if (!no.isFolha()) {
-            child.getFilhos()[0] = sibling.getFilhos()[sibling.getN()];
+            filho.getFilhos()[0] = irmao.getFilhos()[irmao.getN()];
         }
 
-        no.getChaves()[idx - 1] = sibling.getChaves()[sibling.getN() - 1];
-        child.setN(child.getN() + 1);
-        sibling.setN(sibling.getN() - 1);
+        no.getChaves()[indice - 1] = irmao.getChaves()[irmao.getN() - 1];
+        filho.setN(filho.getN() + 1);
+        irmao.setN(irmao.getN() - 1);
+
     }
 
-    private void borrowFromNext(NO_Btree no, int idx) {
-        NO_Btree child = no.getFilhos()[idx];
-        NO_Btree sibling = no.getFilhos()[idx + 1];
+    private void pedirProximo(NO_Btree no, int indice) {
+        NO_Btree filho = no.getFilhos()[indice];
+        NO_Btree irmao = no.getFilhos()[indice + 1];
 
-        child.getChaves()[child.getN()] = no.getChaves()[idx];
+        filho.getChaves()[filho.getN()] = no.getChaves()[indice];
 
-        if (!child.isFolha()) {
-            child.getFilhos()[child.getN() + 1] = sibling.getFilhos()[0];
+        if (!filho.isFolha()) {
+            filho.getFilhos()[filho.getN() + 1] = irmao.getFilhos()[0];
         }
 
-        no.getChaves()[idx] = sibling.getChaves()[0];
+        no.getChaves()[indice] = irmao.getChaves()[0];
 
-        for (int i = 1; i < sibling.getN(); i++) {
-            sibling.getChaves()[i - 1] = sibling.getChaves()[i];
+        for (int i = 1; i < irmao.getN(); i++) {
+            irmao.getChaves()[i - 1] = irmao.getChaves()[i];
         }
 
-        if (!sibling.isFolha()) {
-            for (int i = 1; i <= sibling.getN(); i++) {
-                sibling.getFilhos()[i - 1] = sibling.getFilhos()[i];
+        if (!irmao.isFolha()) {
+            for (int i = 1; i <= irmao.getN(); i++) {
+                irmao.getFilhos()[i - 1] = irmao.getFilhos()[i];
             }
         }
 
-        child.setN(child.getN() + 1);
-        sibling.setN(sibling.getN() - 1);
+        filho.setN(filho.getN() + 1);
+        irmao.setN(irmao.getN() - 1);
     }
 
     private void merge(NO_Btree no, int indice) {
@@ -307,12 +310,12 @@ public class Btree implements Serializable {
         no.setN(no.getN() - 1);
     }
 
-    private int findKey(NO_Btree no, int key) {
-        int idx = 0;
-        while (idx < no.getN() && no.getChaves()[idx].getVal() < key) {
-            idx++;
+    private int acharChave(NO_Btree no, int key) {
+        int indice = 0;
+        while (indice < no.getN() && no.getChaves()[indice].getVal() < key) {
+            indice++;
         }
-        return idx;
+        return indice;
     }
 
     public void salvarEmArquivo(Btree tree, String nomeArquivo) {
